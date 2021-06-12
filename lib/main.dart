@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+  SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(statusBarColor: Colors.transparent));
   runApp(MyApp());
 }
 
@@ -15,11 +16,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AI Radio',
-      theme: ThemeData(
-        fontFamily: GoogleFonts.poppins().fontFamily
-      ),
+      theme: ThemeData(fontFamily: GoogleFonts.poppins().fontFamily),
       home: HomePage(),
     );
   }
 }
-
