@@ -1,5 +1,6 @@
 import 'package:ai_voice_assistant/model/radio.dart';
 import 'package:ai_voice_assistant/utils/ai_util.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,17 +15,37 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<MyRadio> radios;
+  MyRadio _selectedRadio;
+  Color _selectedColor;
+  bool _isPlaying = false;
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    FetchRadios();
+    fetchRadios();
+    _audioPlayer.onPlayerStateChanged.listen((event) {
+      if (event == AudioPlayerState.PLAYING) {
+        _isPlaying = true;
+      } else {
+        _isPlaying = false;
+      }
+      setState(() {});
+    });
   }
 
-  FetchRadios() async {
+  fetchRadios() async {
     final radioJson = await rootBundle.loadString("assets/radio.json");
     radios = MyRadioList.fromJson(radioJson).radios;
     print(radios);
+    setState(() {}); // refresh the UI
+  }
+
+  _playMusic(String url) {
+    _audioPlayer.play(url);
+    _selectedRadio = radios.firstWhere((element) => element.url == url);
+    print(_selectedRadio.name);
     setState(() {});
   }
 
@@ -47,7 +68,7 @@ class _HomePageState extends State<HomePage> {
           elevation: 0.0,
           centerTitle: true,
         ).h(100).p16(),
-        VxSwiper.builder(
+        radios != null ? VxSwiper.builder(
           itemCount: radios.length,
           aspectRatio: 1.0,
           enlargeCenterPage: true,
@@ -97,15 +118,35 @@ class _HomePageState extends State<HomePage> {
                 .border(color: Colors.black, width: 5)
                 .withRounded(value: 60.0)
                 .make()
-                .onInkDoubleTap(() {})
-                .p16();
+                .onInkDoubleTap(() {
+              _playMusic(rad.url);
+            }).p16();
           },
-        ).centered(),
+        ).centered() : Center(
+          child: CircularProgressIndicator(backgroundColor: Colors.white)
+        ),
         Align(
-                alignment: Alignment.bottomCenter,
-                child: Icon(CupertinoIcons.stop_circle,
-                    color: Colors.white, size: 50.0))
-            .pOnly(bottom: context.percentHeight * 12)
+          alignment: Alignment.bottomCenter,
+          child: [
+            if (_isPlaying)
+              "Playing Now - ${_selectedRadio.name} FM"
+                  .text
+                  .white
+                  .makeCentered(),
+            Icon(
+                    _isPlaying
+                        ? CupertinoIcons.stop_circle
+                        : CupertinoIcons.play_circle,
+                    color: Colors.white,
+                    size: 50.0)
+                .onInkTap(() {
+              if (_isPlaying)
+                _audioPlayer.stop();
+              else
+                _playMusic(_selectedRadio.url);
+            })
+          ].vStack(),
+        ).pOnly(bottom: context.percentHeight * 12)
       ], fit: StackFit.expand),
     );
   }
