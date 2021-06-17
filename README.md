@@ -20,3 +20,4 @@ samples, guidance on mobile development, and a full API reference.
 
 - sdk_version : ">=2.11.0 <3.0.0"
 - Additional flutter run args : "--no-sound-null-safely"
+- Remember to add android/app/build to gitignore

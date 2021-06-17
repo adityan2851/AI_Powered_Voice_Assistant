@@ -39,15 +39,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   setupAlan() {
-    AlanVoice.addButton("b87f700bbaf3a44250e5417a3b81716e2e956eca572e1d8b807a3e2338fdd0dc/stage",
-    buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
+    AlanVoice.addButton(
+        "b87f700bbaf3a44250e5417a3b81716e2e956eca572e1d8b807a3e2338fdd0dc/stage",
+        buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
     AlanVoice.callbacks.add((command) => _handleCommand(command.data));
   }
 
-  _handleCommand(Map<String,dynamic> response){
+  _handleCommand(Map<String, dynamic> response) {
     switch (response["command"]) {
       case "play":
         _playMusic(_selectedRadio.url);
+        break;
+      case "play_channel":
+        final id = response["id"];
+        _audioPlayer.pause();
+        MyRadio newRadio = radios.firstWhere((element) => element.id == id);
+        radios.remove(newRadio);
+        radios.insert(0, newRadio);
+        _playMusic(newRadio.url);
         break;
       case "stop":
         _audioPlayer.stop();
@@ -55,12 +64,12 @@ class _HomePageState extends State<HomePage> {
       case "next":
         final index = _selectedRadio.id;
         MyRadio newRadio;
-        if(index+1 > radios.length){
+        if (index + 1 > radios.length) {
           newRadio = radios.firstWhere((element) => element.id == 1);
           radios.remove(newRadio);
           radios.insert(0, newRadio);
         } else {
-          newRadio = radios.firstWhere((element) => element.id == index+1);
+          newRadio = radios.firstWhere((element) => element.id == index + 1);
           radios.remove(newRadio);
           radios.insert(0, newRadio);
         }
@@ -69,17 +78,17 @@ class _HomePageState extends State<HomePage> {
       case "previous":
         final index = _selectedRadio.id;
         MyRadio newRadio;
-        if(index-1 <= 0){
+        if (index - 1 <= 0) {
           newRadio = radios.firstWhere((element) => element.id == 1);
           radios.remove(newRadio);
           radios.insert(0, newRadio);
         } else {
-          newRadio = radios.firstWhere((element) => element.id == index-1);
+          newRadio = radios.firstWhere((element) => element.id == index - 1);
           radios.remove(newRadio);
           radios.insert(0, newRadio);
         }
         _playMusic(newRadio.url);
-        break;  
+        break;
       default:
         print("Command was ${response["Command"]}");
         break;
@@ -109,11 +118,10 @@ class _HomePageState extends State<HomePage> {
       body: Stack(children: [
         VxAnimatedBox()
             .size(context.screenWidth, context.screenHeight)
-            .withGradient(LinearGradient(
-                colors: [AIColors.primaryColor2,
-                _selectedColor ?? AIColors.primaryColor1],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight))
+            .withGradient(LinearGradient(colors: [
+              AIColors.primaryColor2,
+              _selectedColor ?? AIColors.primaryColor1
+            ], begin: Alignment.topLeft, end: Alignment.bottomRight))
             .make(),
         AppBar(
           title: "AI Radio".text.xl4.bold.white.make().shimmer(
@@ -122,69 +130,74 @@ class _HomePageState extends State<HomePage> {
           elevation: 0.0,
           centerTitle: true,
         ).h(100).p16(),
-        radios != null ? VxSwiper.builder(
-          itemCount: radios.length,
-          aspectRatio: 1.0,
-          enlargeCenterPage: true,
-          onPageChanged: (index){
-            _selectedRadio = radios[index];
-            final colorHex = radios[index].color;
-            _selectedColor = Color(int.tryParse(colorHex));
-            setState(() {});
-          },
-          itemBuilder: (context, index) {
-            final rad = radios[index];
-            return VxBox(
-              child: ZStack([
-                Positioned(
-                  right: 0.0,
-                  child: VxBox(
-                          child: rad.category.text.uppercase.white.make().p16())
-                      .height(50)
-                      .black
-                      .alignCenter
-                      .withRounded(value: 10.0)
-                      .make(),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: VStack(
-                    [
-                      rad.name.text.xl3.white.bold.make(),
-                      5.heightBox,
-                      rad.tagline.text.sm.white.semiBold.make()
-                    ],
-                    crossAlignment: CrossAxisAlignment.center,
-                  ),
-                ),
-                Align(
-                    alignment: Alignment.center,
-                    child: [
-                      Icon(CupertinoIcons.play_circle, color: Colors.white),
-                      10.heightBox,
-                      "Double Tap to Play".text.gray300.make()
-                    ].vStack())
-              ]),
-            )
-                .clip(Clip.antiAlias)
-                .bgImage(
-                  DecorationImage(
-                    image: NetworkImage(rad.image),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.3), BlendMode.darken),
-                  ),
-                )
-                .border(color: Colors.black, width: 5)
-                .withRounded(value: 60.0)
-                .make()
-                .onInkDoubleTap(() {
-              _playMusic(rad.url);
-            }).p16();
-          },
-        ).centered() : Center(
-          child: CircularProgressIndicator(backgroundColor: Colors.white)
-        ),
+        radios != null
+            ? VxSwiper.builder(
+                itemCount: radios.length,
+                aspectRatio: 1.0,
+                enlargeCenterPage: true,
+                onPageChanged: (index) {
+                  _selectedRadio = radios[index];
+                  final colorHex = radios[index].color;
+                  _selectedColor = Color(int.tryParse(colorHex));
+                  setState(() {});
+                },
+                itemBuilder: (context, index) {
+                  final rad = radios[index];
+                  return VxBox(
+                    child: ZStack([
+                      Positioned(
+                        right: 0.0,
+                        child: VxBox(
+                                child: rad.category.text.uppercase.white
+                                    .make()
+                                    .p16())
+                            .height(50)
+                            .black
+                            .alignCenter
+                            .withRounded(value: 10.0)
+                            .make(),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: VStack(
+                          [
+                            rad.name.text.xl3.white.bold.make(),
+                            5.heightBox,
+                            rad.tagline.text.sm.white.semiBold.make()
+                          ],
+                          crossAlignment: CrossAxisAlignment.center,
+                        ),
+                      ),
+                      Align(
+                          alignment: Alignment.center,
+                          child: [
+                            Icon(CupertinoIcons.play_circle,
+                                color: Colors.white),
+                            10.heightBox,
+                            "Double Tap to Play".text.gray300.make()
+                          ].vStack())
+                    ]),
+                  )
+                      .clip(Clip.antiAlias)
+                      .bgImage(
+                        DecorationImage(
+                          image: NetworkImage(rad.image),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.3), BlendMode.darken),
+                        ),
+                      )
+                      .border(color: Colors.black, width: 5)
+                      .withRounded(value: 60.0)
+                      .make()
+                      .onInkDoubleTap(() {
+                    _playMusic(rad.url);
+                  }).p16();
+                },
+              ).centered()
+            : Center(
+                child:
+                    CircularProgressIndicator(backgroundColor: Colors.white)),
         Align(
           alignment: Alignment.bottomCenter,
           child: [
